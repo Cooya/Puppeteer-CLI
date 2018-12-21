@@ -12,12 +12,18 @@ Then, we can install the project :
 git clone https://github.com/Cooya/Puppeteer-CLI.git
 cd Puppeteer-CLI
 npm install
+sudo npm link
 ```
+"npm link" allows to create a global symbolic link, and thus to run the command from anywhere on the system.
 
 ## Execution
-The port 9222 needs to be free. To run the tool :
+The port 9222 needs to be free. To run the tool from the project directory root :
 ```bash
 node cli.js -u google.com
+```
+or from anywhere :
+```bash
+pup -u google.com
 ```
 The page HTML content will be printed.
 
