@@ -31,8 +31,8 @@ const argv = yargs
 	.describe('p', 'Proxy server to use')
 	.string('p')
 
-	.option('headless', {
-		default: true,
+	.option('no-headless', {
+		default: false,
 		describe: 'Display the web browser',
 		type: 'boolean'
 	})
@@ -45,12 +45,21 @@ const argv = yargs
 	const url = argv.url.match(/http:\/\/|https:\/\//) ? argv.url : 'http://' + argv.url;
 	const outputFile = argv.outputFile && path.resolve(argv.outputFile);
 	const screenshotFile = argv.screenshotFile && path.resolve(argv.screenshotFile);
+	const args = [
+		'--no-sandbox',
+		'--disable-setuid-sandbox',
+		'--disable-notifications',
+		'--window-size=1600,900',
+		'--lang=en_US'
+	];
+	if(argv.proxy)
+		args.push('--proxy-server=' + argv.proxy);
 
-	let browser;
 	try {
-		browser = await puppeteer.launch({
-			headless: argv.headless,
-			args: argv.proxy ? ['--proxy-server=' + argv.proxy] : []
+		const browser = await puppeteer.launch({
+			headless: !argv.headless,
+			args,
+			dumpio: true
 		});
 		const page = await browser.newPage();
 		await page.setUserAgent('Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0');
@@ -64,9 +73,9 @@ const argv = yargs
 			await writeFile(outputFile, pageContent);
 		else
 			console.log(pageContent);
+		await browser.close();
 	}
 	catch(e) {
 		console.error(e);
 	}
-	await browser.close();
 })();
