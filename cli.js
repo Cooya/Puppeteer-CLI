@@ -52,6 +52,7 @@ const argv = yargs
 		'--window-size=1600,900',
 		'--lang=en_US'
 	];
+	
 	if(argv.proxy)
 		args.push('--proxy-server=' + argv.proxy);
 
