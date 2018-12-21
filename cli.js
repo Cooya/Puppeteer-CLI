@@ -1,10 +1,15 @@
+#!/usr/bin/env node
+
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const util = require('util');
 const yargs = require('yargs');
 
+const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
+
+const COOKIES_FILE = './cookies.json';
 
 const argv = yargs
 	.usage('Usage: $0 -u URL [-o OUTPUT_FILE] [-s SCREENSHOT_FILE] [-p SERVER:PORT] [--displayBrowser]')
@@ -37,11 +42,21 @@ const argv = yargs
 		default: false
 	})
 
+	.option('v', {
+		alias: 'verbose',
+		describe: 'Verbose mode',
+		type: 'boolean',
+		default: false
+	})
+
 	.help('h')
 	.alias('h', 'help')
 	.argv;
 
 (async () => {
+	if(!argv.v)
+		console.debug = () => {};
+
 	const url = argv.url.match(/http:\/\/|https:\/\//) ? argv.url : 'http://' + argv.url;
 	const outputFile = argv.outputFile && path.resolve(argv.outputFile);
 	const screenshotFile = argv.screenshotFile && path.resolve(argv.screenshotFile);
@@ -64,9 +79,18 @@ const argv = yargs
 		await page.setUserAgent('Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0');
 		await page.setViewport({ width: 1600, height: 900 });
 		await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8' });
-		//console.debug('Going to "%s"...', url);
+
+		console.debug('Going to "%s"...', url);
+		await loadCookies(page, COOKIES_FILE);
 		await page.goto(url, {waitUntil: 'networkidle2'});
-		if(screenshotFile) await page.screenshot({path: screenshotFile});
+		await saveCookies(page, COOKIES_FILE);
+
+		if(screenshotFile) {
+			console.debug('Taking screenshot...');
+			await page.screenshot({path: screenshotFile});
+			console.debug('Screenshot saved.');
+		}
+
 		const pageContent = await page.content();
 		if(outputFile)
 			await writeFile(outputFile, pageContent);
@@ -78,3 +102,25 @@ const argv = yargs
 		console.error(e);
 	}
 })();
+
+async function loadCookies(page, cookiesFile) {
+	console.debug('Loading cookies...');
+	let cookies;
+	try {
+		cookies = JSON.parse(await readFile(cookiesFile, 'utf-8'));
+	}
+	catch (e) {
+		await writeFile(cookiesFile, '[]');
+		console.debug('Empty cookies file created.');
+		return;
+	}
+	await page.setCookie(...cookies);
+	console.debug('Cookies loaded.');
+}
+
+async function saveCookies(page, cookiesFile) {
+	console.debug('Saving cookies...');
+	const cookies = JSON.stringify(await page.cookies());
+	await writeFile(cookiesFile, cookies);
+	console.debug('Cookies saved.');
+}
