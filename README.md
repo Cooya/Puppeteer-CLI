@@ -24,14 +24,14 @@ The page HTML content will be printed.
 ## Usage
 ```
 Usage: cli.js -u URL [-o OUTPUT_FILE] [-s SCREENSHOT_FILE] [-p SERVER:PORT]
-[--no-headless]
+[--displayBrowser]
 
 Options:
   -u, --url             Target URL to get the HTML from      [string] [required]
   -o, --outputFile      Output file for the HTML content                [string]
   -s, --screenshotFile  Destination file for the screenshot             [string]
   -p, --proxy           Proxy server to use                             [string]
-  --head                Display the web browser (cannot be used on a server)
+  --displayBrowser      Display the web browser (cannot be used on a server)
                                                       [boolean] [default: false]
   -h, --help            Show help                                      [boolean]
   ```

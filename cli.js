@@ -7,7 +7,7 @@ const yargs = require('yargs');
 const writeFile = util.promisify(fs.writeFile);
 
 const argv = yargs
-	.usage('Usage: $0 -u URL [-o OUTPUT_FILE] [-s SCREENSHOT_FILE] [-p SERVER:PORT] [--no-headless]')
+	.usage('Usage: $0 -u URL [-o OUTPUT_FILE] [-s SCREENSHOT_FILE] [-p SERVER:PORT] [--displayBrowser]')
 	.version(false)
 
 	.nargs('u', 1)
@@ -31,7 +31,7 @@ const argv = yargs
 	.describe('p', 'Proxy server to use')
 	.string('p')
 
-	.option('head', {
+	.option('displayBrowser', {
 		describe: 'Display the web browser (cannot be used on a server)',
 		type: 'boolean',
 		default: false
@@ -57,7 +57,7 @@ const argv = yargs
 
 	try {
 		const browser = await puppeteer.launch({
-			headless: !argv.head,
+			headless: !argv.displayBrowser,
 			args
 		});
 		const page = await browser.newPage();
