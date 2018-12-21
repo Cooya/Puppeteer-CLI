@@ -7,7 +7,7 @@ const yargs = require('yargs');
 const writeFile = util.promisify(fs.writeFile);
 
 const argv = yargs
-	.usage('Usage: $0 -u URL [-o OUTPUT_FILE] [-s SCREENSHOT_FILE] [-p SERVER:PORT] [--headless]')
+	.usage('Usage: $0 -u URL [-o OUTPUT_FILE] [-s SCREENSHOT_FILE] [-p SERVER:PORT] [--no-headless]')
 	.version(false)
 
 	.nargs('u', 1)
@@ -33,7 +33,7 @@ const argv = yargs
 
 	.option('no-headless', {
 		default: false,
-		describe: 'Display the web browser',
+		describe: 'Display the web browser (cannot be used on a server)',
 		type: 'boolean'
 	})
 
@@ -48,9 +48,8 @@ const argv = yargs
 	const args = [
 		'--no-sandbox',
 		'--disable-setuid-sandbox',
-		'--disable-notifications',
-		'--window-size=1600,900',
-		'--lang=en_US'
+		'--ignore-certificate-errors',
+		'--remote-debugging-port=9222'
 	];
 	
 	if(argv.proxy)
@@ -58,10 +57,8 @@ const argv = yargs
 
 	try {
 		const browser = await puppeteer.launch({
-			headless: !argv.headless,
-			args,
-			dumpio: true,
-			devtools: false
+			headless: argv.noHeadless,
+			args
 		});
 		const page = await browser.newPage();
 		await page.setUserAgent('Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0');
