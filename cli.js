@@ -31,10 +31,10 @@ const argv = yargs
 	.describe('p', 'Proxy server to use')
 	.string('p')
 
-	.option('no-headless', {
-		default: false,
+	.option('head', {
 		describe: 'Display the web browser (cannot be used on a server)',
-		type: 'boolean'
+		type: 'boolean',
+		default: false
 	})
 
 	.help('h')
@@ -57,7 +57,7 @@ const argv = yargs
 
 	try {
 		const browser = await puppeteer.launch({
-			headless: argv.noHeadless,
+			headless: !argv.head,
 			args
 		});
 		const page = await browser.newPage();
