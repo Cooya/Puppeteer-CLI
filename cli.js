@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const freePort = require('find-free-port');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
@@ -12,7 +13,9 @@ const writeFile = util.promisify(fs.writeFile);
 const COOKIES_FILE = './cookies.json';
 
 const argv = yargs
-	.usage('Usage: $0 -u URL [-o OUTPUT_FILE] [-s SCREENSHOT_FILE] [-p SERVER:PORT] [--displayBrowser]')
+	.usage(
+		'Usage: $0 -u URL [-o OUTPUT_FILE] [-s SCREENSHOT_FILE] [-p SERVER:PORT] [--displayBrowser]'
+	)
 	.version(false)
 
 	.nargs('u', 1)
@@ -50,12 +53,10 @@ const argv = yargs
 	})
 
 	.help('h')
-	.alias('h', 'help')
-	.argv;
+	.alias('h', 'help').argv;
 
 (async () => {
-	if(!argv.v)
-		console.debug = () => {};
+	if (!argv.v) console.debug = () => {};
 
 	const url = argv.url.match(/http:\/\/|https:\/\//) ? argv.url : 'http://' + argv.url;
 	const outputFile = argv.outputFile && path.resolve(argv.outputFile);
@@ -64,11 +65,10 @@ const argv = yargs
 		'--no-sandbox',
 		'--disable-setuid-sandbox',
 		'--ignore-certificate-errors',
-		'--remote-debugging-port=9222'
+		'--remote-debugging-port=' + (await freePort(3000, 3500))
 	];
-	
-	if(argv.proxy)
-		args.push('--proxy-server=' + argv.proxy);
+
+	if (argv.proxy) args.push('--proxy-server=' + argv.proxy);
 
 	try {
 		const browser = await puppeteer.launch({
@@ -76,29 +76,28 @@ const argv = yargs
 			args
 		});
 		const page = await browser.newPage();
-		await page.setUserAgent('Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0');
+		await page.setUserAgent(
+			'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:57.0) Gecko/20100101 Firefox/57.0'
+		);
 		await page.setViewport({ width: 1600, height: 900 });
 		await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8' });
 
 		console.debug('Going to "%s"...', url);
 		await loadCookies(page, COOKIES_FILE);
-		await page.goto(url, {waitUntil: 'networkidle2'});
+		await page.goto(url, { waitUntil: 'networkidle2' });
 		await saveCookies(page, COOKIES_FILE);
 
-		if(screenshotFile) {
+		if (screenshotFile) {
 			console.debug('Taking screenshot...');
-			await page.screenshot({path: screenshotFile});
+			await page.screenshot({ path: screenshotFile });
 			console.debug('Screenshot saved.');
 		}
 
 		const pageContent = await page.content();
-		if(outputFile)
-			await writeFile(outputFile, pageContent);
-		else
-			console.log(pageContent);
+		if (outputFile) await writeFile(outputFile, pageContent);
+		else console.log(pageContent);
 		await browser.close();
-	}
-	catch(e) {
+	} catch (e) {
 		console.error(e);
 	}
 })();
@@ -108,8 +107,7 @@ async function loadCookies(page, cookiesFile) {
 	let cookies;
 	try {
 		cookies = JSON.parse(await readFile(cookiesFile, 'utf-8'));
-	}
-	catch (e) {
+	} catch (e) {
 		await writeFile(cookiesFile, '[]');
 		console.debug('Empty cookies file created.');
 		return;
