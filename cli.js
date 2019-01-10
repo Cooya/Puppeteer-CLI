@@ -70,8 +70,9 @@ const argv = yargs
 
 	if (argv.proxy) args.push('--proxy-server=' + argv.proxy);
 
+	let browser;
 	try {
-		const browser = await puppeteer.launch({
+		browser = await puppeteer.launch({
 			headless: !argv.displayBrowser,
 			args
 		});
@@ -96,10 +97,10 @@ const argv = yargs
 		const pageContent = await page.content();
 		if (outputFile) await writeFile(outputFile, pageContent);
 		else console.log(pageContent);
-		await browser.close();
 	} catch (e) {
 		console.error(e);
 	}
+	if (browser) await browser.close();
 })();
 
 async function loadCookies(page, cookiesFile) {
